@@ -70,12 +70,20 @@ export async function fetchISSPosition() {
  */
 export async function fetchAstronauts() {
   try {
-    // Use AllOrigins RAW for astronauts as well
+    // Use AllOrigins RAW for astronauts to bypass mixed content
     const target = 'http://api.open-notify.org/astros.json';
     const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`;
     const response = await axios.get(proxyUrl, { timeout: 10000 });
-    const data = response.data;
+    
+    // Robust parsing: handle both object and string responses
+    const data = typeof response.data === 'string' 
+      ? JSON.parse(response.data) 
+      : response.data;
       
+    if (!data || data.message !== 'success') {
+      throw new Error('Invalid astronaut data format');
+    }
+
     return {
       number: data.number,
       people: data.people,
