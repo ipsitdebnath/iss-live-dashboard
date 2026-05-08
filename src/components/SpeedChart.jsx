@@ -53,9 +53,10 @@ export default function SpeedChart({ speedHistory }) {
               height={60}
             />
             <YAxis
+              domain={['dataMin - 5', 'dataMax + 5']}
               tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
               axisLine={{ stroke: 'var(--chart-grid)' }}
-              tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+              tickFormatter={(v) => `${v.toFixed(0)}`}
               width={45}
             />
             <Tooltip content={<CustomTooltip />} />
