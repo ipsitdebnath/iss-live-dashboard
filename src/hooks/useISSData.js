@@ -36,32 +36,38 @@ export function useISSData() {
         return updated.slice(-ISS_MAX_POSITIONS);
       });
 
-      // Calculate speed using Haversine formula
-      if (prevPositionRef.current) {
+      // Calculate speed using Haversine formula or use real-time velocity if available
+      let currentSpeed = null;
+
+      if (pos.realVelocity) {
+        // Preference 1: Direct speed from satellite (instant)
+        currentSpeed = pos.realVelocity;
+      } else if (prevPositionRef.current) {
+        // Preference 2: Calculated speed from previous positions
         const prev = prevPositionRef.current;
         const dist = haversineDistance(
           prev.latitude, prev.longitude,
           pos.latitude, pos.longitude
         );
         const timeDiff = pos.timestamp - prev.timestamp;
-        const speed = calculateSpeed(dist, timeDiff);
+        currentSpeed = calculateSpeed(dist, timeDiff);
+      }
 
-        // Only add reasonable speeds (ISS orbits at ~27,500 km/h)
-        if (speed > 0 && speed < 50000) {
-          setSpeedHistory((prev) => {
-            const entry = {
-              speed: Math.round(speed * 100) / 100,
-              time: new Date(pos.timestamp * 1000).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              }),
-              timestamp: pos.timestamp,
-            };
-            const updated = [...prev, entry];
-            return updated.slice(-ISS_MAX_SPEED_HISTORY);
-          });
-        }
+      // If we have a speed (either real or calculated), update history
+      if (currentSpeed && currentSpeed > 0 && currentSpeed < 50000) {
+        setSpeedHistory((prev) => {
+          const entry = {
+            speed: Math.round(currentSpeed * 100) / 100,
+            time: new Date(pos.timestamp * 1000).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+            }),
+            timestamp: pos.timestamp,
+          };
+          const updated = [...prev, entry];
+          return updated.slice(-ISS_MAX_SPEED_HISTORY);
+        });
       }
 
       prevPositionRef.current = pos;
