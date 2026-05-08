@@ -5,9 +5,9 @@
 // ISS Tracking
 // Using wheretheiss.at because it supports HTTPS (critical for production deployment)
 export const ISS_POSITION_URL = 'https://api.wheretheiss.at/v1/satellites/25544';
-// Astros API remains HTTP, so we wrap it in a proxy
-export const ISS_ASTROS_URL = 'https://api.allorigins.win/get?url=' + encodeURIComponent('http://api.open-notify.org/astros.json');
-export const ISS_REFRESH_INTERVAL = 15000; // 15 seconds
+// We use a different proxy for astros to ensure CORS compatibility
+export const ISS_ASTROS_URL = 'http://api.open-notify.org/astros.json';
+export const ISS_REFRESH_INTERVAL = 30000; // 30 seconds to avoid 429 Rate Limits
 export const ISS_MAX_POSITIONS = 50; // Max positions stored for trajectory
 export const ISS_MAX_SPEED_HISTORY = 30; // Max speed data points for chart
 

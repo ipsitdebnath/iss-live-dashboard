@@ -12,10 +12,9 @@ import { ISS_POSITION_URL, ISS_ASTROS_URL, REVERSE_GEOCODE_URL } from '../utils/
  */
 export async function fetchISSPosition() {
   try {
-    // wheretheiss.at supports HTTPS directly, no proxy needed.
-    // We add a timestamp for cache busting just in case.
-    const url = `${ISS_POSITION_URL}?_=${Date.now()}`;
-    const response = await axios.get(url, { timeout: 10000 });
+    // wheretheiss.at supports HTTPS directly.
+    // Removed cache buster to avoid triggering Rate Limits (429).
+    const response = await axios.get(ISS_POSITION_URL, { timeout: 10000 });
     
     const { latitude, longitude, timestamp, velocity } = response.data;
     
@@ -23,7 +22,6 @@ export async function fetchISSPosition() {
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
       timestamp,
-      // Optional: Add real velocity from the satellite to supplement calculation
       realVelocity: velocity 
     };
   } catch (error) {
@@ -38,13 +36,14 @@ export async function fetchISSPosition() {
  */
 export async function fetchAstronauts() {
   try {
-    // ISS_ASTROS_URL is already wrapped in the proxy in constants.js
-    const response = await axios.get(ISS_ASTROS_URL, { timeout: 10000 });
+    // Use allorigins proxy with /get to bypass mixed content and CORS
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(ISS_ASTROS_URL)}`;
+    const response = await axios.get(proxyUrl, { timeout: 10000 });
     
-    // allorigins returns the actual JSON string inside the 'contents' property
+    // Parse the JSON string inside the 'contents' property
     const data = typeof response.data.contents === 'string' 
       ? JSON.parse(response.data.contents) 
-      : response.data.contents || response.data;
+      : response.data.contents;
       
     return {
       number: data.number,
