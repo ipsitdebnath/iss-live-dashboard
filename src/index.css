@@ -1,0 +1,179 @@
+@import "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap";
+@import "tailwindcss";
+
+/* ========================================
+   ISS Live Tracker & AI News Dashboard
+   Warm Brown / Mission Control Theme
+   ======================================== */
+
+/* CSS Custom Properties — Light (default) */
+:root {
+  --bg-primary: #faf6f1;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fdf8f3;
+  --text-primary: #2d1810;
+  --text-secondary: #6b5344;
+  --text-muted: #a08979;
+  --accent: #c75b12;
+  --accent-hover: #a04a0e;
+  --accent-light: #f5e6d8;
+  --accent-blue: #2563eb;
+  --border-color: #e8d5c4;
+  --border-light: #f0e4d8;
+  --shadow-color: rgba(45, 24, 16, 0.08);
+  --shadow-md: 0 2px 8px rgba(45, 24, 16, 0.08);
+  --shadow-lg: 0 4px 16px rgba(45, 24, 16, 0.12);
+  --header-bg: #fefcfa;
+  --input-bg: #faf6f1;
+  --badge-bg: #c75b12;
+  --badge-text: #ffffff;
+  --chat-user-bg: #c75b12;
+  --chat-ai-bg: #f5f0eb;
+  --chart-line: #c75b12;
+  --chart-grid: #e8d5c4;
+  --map-popup-bg: #ffffff;
+  --map-popup-text: #2d1810;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --bg-primary: #1a1008;
+  --bg-secondary: #241a10;
+  --bg-card: #2a1e14;
+  --bg-card-hover: #362818;
+  --text-primary: #f5ebe0;
+  --text-secondary: #c4a882;
+  --text-muted: #8b7355;
+  --accent: #e8782a;
+  --accent-hover: #ff8c3a;
+  --accent-light: #3a2818;
+  --accent-blue: #60a5fa;
+  --border-color: #3d2e1e;
+  --border-light: #332618;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --header-bg: #1e1208;
+  --input-bg: #2a1e14;
+  --badge-bg: #e8782a;
+  --badge-text: #ffffff;
+  --chat-user-bg: #e8782a;
+  --chat-ai-bg: #2a1e14;
+  --chart-line: #e8782a;
+  --chart-grid: #3d2e1e;
+  --map-popup-bg: #2a1e14;
+  --map-popup-text: #f5ebe0;
+}
+
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ===== Leaflet Overrides ===== */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--map-popup-bg) !important;
+  color: var(--map-popup-text) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-family: "Inter", sans-serif !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--map-popup-bg) !important;
+}
+
+.leaflet-popup-content {
+  margin: 10px 14px !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+/* ===== Toast Overrides ===== */
+.toast-custom {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
