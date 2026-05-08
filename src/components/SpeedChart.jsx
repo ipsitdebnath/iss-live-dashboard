@@ -21,12 +21,17 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function SpeedChart({ speedHistory }) {
-  if (!speedHistory || speedHistory.length < 2) {
+  // If we have only 1 point, duplicate it so the line chart can render immediately
+  const displayData = speedHistory?.length === 1 
+    ? [speedHistory[0], { ...speedHistory[0], time: 'Initializing...' }]
+    : speedHistory;
+
+  if (!displayData || displayData.length === 0) {
     return (
       <div className="rounded-lg p-5 border border-[var(--border-color)] bg-[var(--bg-card)] h-full flex flex-col">
         <h3 className="text-base font-bold text-[var(--text-primary)] mb-4">ISS Speed Trend</h3>
         <div className="flex-1 flex items-center justify-center text-sm text-[var(--text-muted)]">
-          Collecting speed data... ({speedHistory.length}/2 measurements)
+          Collecting speed data... (0/1 measurements)
         </div>
       </div>
     );
@@ -37,7 +42,7 @@ export default function SpeedChart({ speedHistory }) {
       <h3 className="text-base font-bold text-[var(--text-primary)] mb-4">ISS Speed Trend</h3>
       <div className="flex-1 w-full min-h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={speedHistory} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+          <LineChart data={displayData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
             <XAxis
               dataKey="time"
