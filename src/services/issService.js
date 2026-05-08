@@ -12,21 +12,42 @@ import { ISS_POSITION_URL, ISS_ASTROS_URL, REVERSE_GEOCODE_URL } from '../utils/
  */
 export async function fetchISSPosition() {
   try {
-    // wheretheiss.at supports HTTPS directly.
-    // Removed cache buster to avoid triggering Rate Limits (429).
-    const response = await axios.get(ISS_POSITION_URL, { timeout: 10000 });
+    // Attempt 1: wheretheiss.at (Native HTTPS, fast, but strict rate limits)
+    try {
+      const response = await axios.get(ISS_POSITION_URL, { timeout: 8000 });
+      if (response.data && response.data.latitude) {
+        return {
+          latitude: parseFloat(response.data.latitude),
+          longitude: parseFloat(response.data.longitude),
+          timestamp: response.data.timestamp,
+          realVelocity: response.data.velocity
+        };
+      }
+    } catch (e) {
+      console.warn('Primary ISS API failed or rate-limited, trying fallback...', e.message);
+    }
+
+    // Attempt 2: open-notify.org via AllOrigins proxy (More permissive, but slower)
+    const fallbackTarget = 'http://api.open-notify.org/iss-now.json';
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(fallbackTarget)}`;
+    const response = await axios.get(proxyUrl, { timeout: 10000 });
     
-    const { latitude, longitude, timestamp, velocity } = response.data;
+    const data = typeof response.data.contents === 'string' 
+      ? JSON.parse(response.data.contents) 
+      : response.data.contents;
+
+    if (data && data.iss_position) {
+      return {
+        latitude: parseFloat(data.iss_position.latitude),
+        longitude: parseFloat(data.iss_position.longitude),
+        timestamp: data.timestamp
+      };
+    }
     
-    return {
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
-      timestamp,
-      realVelocity: velocity 
-    };
+    throw new Error('All ISS data sources failed.');
   } catch (error) {
-    console.error('Failed to fetch ISS position:', error);
-    throw new Error('Unable to fetch ISS position. Please try again.');
+    console.error('Final ISS fetch error:', error);
+    throw new Error('Unable to fetch ISS position. The satellite tracking services are currently rate-limited. Please wait 1-2 minutes.');
   }
 }
 
@@ -36,11 +57,11 @@ export async function fetchISSPosition() {
  */
 export async function fetchAstronauts() {
   try {
-    // Use allorigins proxy with /get to bypass mixed content and CORS
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(ISS_ASTROS_URL)}`;
+    // Use allorigins proxy to bypass mixed content and CORS
+    const fallbackTarget = 'http://api.open-notify.org/astros.json';
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(fallbackTarget)}`;
     const response = await axios.get(proxyUrl, { timeout: 10000 });
     
-    // Parse the JSON string inside the 'contents' property
     const data = typeof response.data.contents === 'string' 
       ? JSON.parse(response.data.contents) 
       : response.data.contents;
