@@ -12,9 +12,9 @@ import { ISS_POSITION_URL, ISS_ASTROS_URL, REVERSE_GEOCODE_URL } from '../utils/
  */
 export async function fetchISSPosition() {
   try {
-    // Attempt 1: wheretheiss.at (Native HTTPS, fast, but strict rate limits)
+    // Attempt 1: wheretheiss.at (Direct HTTPS)
     try {
-      const response = await axios.get(ISS_POSITION_URL, { timeout: 8000 });
+      const response = await axios.get(ISS_POSITION_URL, { timeout: 5000 });
       if (response.data && response.data.latitude) {
         return {
           latitude: parseFloat(response.data.latitude),
@@ -24,30 +24,43 @@ export async function fetchISSPosition() {
         };
       }
     } catch (e) {
-      console.warn('Primary ISS API failed or rate-limited, trying fallback...', e.message);
+      console.warn('Primary API failed, trying Fallback A (AllOrigins)...');
     }
 
-    // Attempt 2: open-notify.org via AllOrigins proxy (More permissive, but slower)
-    const fallbackTarget = 'http://api.open-notify.org/iss-now.json';
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(fallbackTarget)}`;
-    const response = await axios.get(proxyUrl, { timeout: 10000 });
-    
-    const data = typeof response.data.contents === 'string' 
-      ? JSON.parse(response.data.contents) 
-      : response.data.contents;
+    // Attempt 2: open-notify.org via AllOrigins Raw (Bypasses mixed content)
+    try {
+      const fallbackTarget = 'http://api.open-notify.org/iss-now.json';
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fallbackTarget)}`;
+      const response = await axios.get(proxyUrl, { timeout: 8000 });
+      const data = response.data;
+      if (data && data.iss_position) {
+        return {
+          latitude: parseFloat(data.iss_position.latitude),
+          longitude: parseFloat(data.iss_position.longitude),
+          timestamp: data.timestamp
+        };
+      }
+    } catch (e) {
+      console.warn('Fallback A failed, trying Fallback B (CorsProxy)...');
+    }
 
-    if (data && data.iss_position) {
+    // Attempt 3: open-notify.org via CorsProxy.io
+    const fallbackTargetB = 'http://api.open-notify.org/iss-now.json';
+    const proxyUrlB = `https://corsproxy.io/?${encodeURIComponent(fallbackTargetB)}`;
+    const responseB = await axios.get(proxyUrlB, { timeout: 8000 });
+    const dataB = responseB.data;
+    if (dataB && dataB.iss_position) {
       return {
-        latitude: parseFloat(data.iss_position.latitude),
-        longitude: parseFloat(data.iss_position.longitude),
-        timestamp: data.timestamp
+        latitude: parseFloat(dataB.iss_position.latitude),
+        longitude: parseFloat(dataB.iss_position.longitude),
+        timestamp: dataB.timestamp
       };
     }
     
-    throw new Error('All ISS data sources failed.');
+    throw new Error('All data sources failed.');
   } catch (error) {
-    console.error('Final ISS fetch error:', error);
-    throw new Error('Unable to fetch ISS position. The satellite tracking services are currently rate-limited. Please wait 1-2 minutes.');
+    console.error('All ISS tracking sources are currently unavailable:', error.message);
+    throw new Error('ISS Tracking is currently rate-limited due to high traffic on this network. Please refresh in a minute.');
   }
 }
 
@@ -57,14 +70,11 @@ export async function fetchISSPosition() {
  */
 export async function fetchAstronauts() {
   try {
-    // Use allorigins proxy to bypass mixed content and CORS
-    const fallbackTarget = 'http://api.open-notify.org/astros.json';
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(fallbackTarget)}`;
+    // Use AllOrigins RAW for astronauts as well
+    const target = 'http://api.open-notify.org/astros.json';
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`;
     const response = await axios.get(proxyUrl, { timeout: 10000 });
-    
-    const data = typeof response.data.contents === 'string' 
-      ? JSON.parse(response.data.contents) 
-      : response.data.contents;
+    const data = response.data;
       
     return {
       number: data.number,
