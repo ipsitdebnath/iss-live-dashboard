@@ -12,17 +12,19 @@ import { ISS_POSITION_URL, ISS_ASTROS_URL, REVERSE_GEOCODE_URL } from '../utils/
  */
 export async function fetchISSPosition() {
   try {
-    // Append a cache-buster parameter directly to the target URL to ensure fresh data
-    const targetUrl = `${ISS_POSITION_URL}?_=${Date.now()}`;
-    // Wrap with corsproxy.io
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+    // wheretheiss.at supports HTTPS directly, no proxy needed.
+    // We add a timestamp for cache busting just in case.
+    const url = `${ISS_POSITION_URL}?_=${Date.now()}`;
+    const response = await axios.get(url, { timeout: 10000 });
     
-    const response = await axios.get(proxyUrl, { timeout: 10000 });
-    const { iss_position, timestamp } = response.data;
+    const { latitude, longitude, timestamp, velocity } = response.data;
+    
     return {
-      latitude: parseFloat(iss_position.latitude),
-      longitude: parseFloat(iss_position.longitude),
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
       timestamp,
+      // Optional: Add real velocity from the satellite to supplement calculation
+      realVelocity: velocity 
     };
   } catch (error) {
     console.error('Failed to fetch ISS position:', error);
@@ -36,11 +38,9 @@ export async function fetchISSPosition() {
  */
 export async function fetchAstronauts() {
   try {
-    const targetUrl = `${ISS_ASTROS_URL}?_=${Date.now()}`;
-    // Using allorigins for astros to avoid 429 Too Many Requests from corsproxy.io
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+    // ISS_ASTROS_URL is already wrapped in the proxy in constants.js
+    const response = await axios.get(ISS_ASTROS_URL, { timeout: 10000 });
     
-    const response = await axios.get(proxyUrl, { timeout: 10000 });
     // allorigins returns the actual JSON string inside the 'contents' property
     const data = typeof response.data.contents === 'string' 
       ? JSON.parse(response.data.contents) 
